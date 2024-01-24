@@ -78,18 +78,16 @@ bedrock_runtime = boto3.client(
     service_name="bedrock-runtime",
     region_name="ap-southeast-1",
 )
-model_id = "anthropic.claude-v2"
-model_kwargs = {
-    "max_tokens_to_sample": 4096,
-    "temperature": 0.5,
-    "top_k": 250,
-    "top_p": 1,
-    "stop_sequences": ["\n\nHuman"],
-}
 llm = Bedrock(
     client=bedrock_runtime,
-    model_id=model_id,
-    model_kwargs=model_kwargs,
+    model_id="meta.llama2-70b-v1:0:4k",
+    model_kwargs={
+        "max_tokens_to_sample": 4096,
+        "temperature": 0.5,
+        "top_k": 250,
+        "top_p": 1,
+        "stop_sequences": ["\n\nHuman"],
+    },
     streaming=True,
     callback_manager=CallbackManager([StreamingStdErrCallbackHandler()]),
 )

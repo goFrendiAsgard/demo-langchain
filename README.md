@@ -107,4 +107,4 @@ python agent.py
 - [LLM Visualized](https://bbycroft.net/llm). Interactive illustration. Quite fun.
 - [Ollama](https://ollama.ai/). Run LLM locally, well documented. Start here for simple use cases.
 - [Langchain](https://www.langchain.com/). The LLM Framework, has massive integrations. Currently under development. Can be intimidating for beginners.
-
+- [Agent with Bedrock](https://github.com/build-on-aws/amazon-bedrock-custom-langchain-agent)
