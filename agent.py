@@ -17,9 +17,17 @@ from langchain.prompts import PromptTemplate
 
 
 class StreamingStdErrCallbackHandler(StreamingStdOutCallbackHandler):
+    def __init__(self) -> None:
+        super().__init__()
+        self._is_first_token = True
+
     def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
-        sys.stderr.write(token)
+        shown_text = token.replace("\n", "\n    🖳 ")
+        if self._is_first_token:
+            shown_text = "    🖳" + shown_text
+        sys.stderr.write(shown_text)
         sys.stderr.flush()
+        self._is_first_token = False
 
 
 def get_llm(llm_provider: str) -> BaseLanguageModel:
@@ -100,7 +108,7 @@ def get_chat_history() -> str:
 def save_chat_history(human_message: str, ai_message: str):
     with open("history.txt", "a") as history_file:
         history_file.write(f"Human: {human_message}\n")
-        history_file.write(f"AI: {ai_message}\n")
+        history_file.write(f"Assistant: {ai_message}\n")
 
 
 if __name__ == "__main__":
