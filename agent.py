@@ -1,10 +1,12 @@
 import boto3
+import os
 import sys
 from typing import Any
 
 from langchain.agents import AgentExecutor, Tool, create_react_agent
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain_community.chat_models import ChatOllama
 from langchain_community.llms import Bedrock
 from langchain_community.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
 from langchain_openai import ChatOpenAI
@@ -57,29 +59,40 @@ prompt = PromptTemplate.from_template(
     )
 )
 
-llm = ChatOpenAI(
-    temperature=0,
+# llm = ChatOpenAI(
+#     api_key=os.getenv('OPENAI_API_KEY'),
+#     temperature=0,
+#     streaming=True,
+#     callback_manager=CallbackManager([StreamingStdErrCallbackHandler()]),
+# )
+
+# llm = ChatOllama(
+#     model="mistral",
+#     callback_manager=CallbackManager([StreamingStdErrCallbackHandler()]),
+#     temperature=0.9,
+# )
+
+bedrock_runtime = boto3.client(
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+    service_name="bedrock-runtime",
+    region_name="ap-southeast-1",
+)
+model_id = "anthropic.claude-v2"
+model_kwargs = {
+    "max_tokens_to_sample": 4096,
+    "temperature": 0.5,
+    "top_k": 250,
+    "top_p": 1,
+    "stop_sequences": ["\n\nHuman"],
+}
+llm = Bedrock(
+    client=bedrock_runtime,
+    model_id=model_id,
+    model_kwargs=model_kwargs,
     streaming=True,
     callback_manager=CallbackManager([StreamingStdErrCallbackHandler()]),
 )
-
-# bedrock_runtime = boto3.client(
-#     service_name="bedrock-runtime",
-#     region_name="us-east-1",
-# )
-# model_id = "anthropic.claude-v2"
-# model_kwargs = {
-#     "max_tokens_to_sample": 4096,
-#     "temperature": 0.5,
-#     "top_k": 250,
-#     "top_p": 1,
-#     "stop_sequences": ["\n\nHuman"],
-# }
-# llm = Bedrock(
-#     client=bedrock_runtime,
-#     model_id=model_id,
-#     model_kwargs=model_kwargs
-# )
 
 agent = create_react_agent(llm=llm, tools=tools, prompt=prompt)
 
