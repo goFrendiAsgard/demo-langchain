@@ -50,7 +50,7 @@ Prerequisites
 
 ```bash
 export LLM_PROVIDER=openai
-python agent.py
+python agent.py "Hello I'm Bob"
 ```
 
 # Using Ollama (Local)
@@ -72,7 +72,7 @@ Prerequisites
 
 ```bash
 export LLM_PROVIDER=ollama
-python agent.py
+python agent.py "Hello I'm Bob"
 ```
 
 # Using Bedrock
@@ -110,7 +110,7 @@ Prerequisites
 
 ```bash
 export LLM_PROVIDER=openai
-python agent.py
+python agent.py "Hello I'm Bob"
 ```
 
 # Further Reading
