@@ -9,12 +9,19 @@
 
 # Creating Virtual Environment
 
+Whenever you work with Python, it is better to use virtual environments.
+
+Virtual environments help you to isolate Python packages for different projects.
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 # Prepare Environment Variables
+
+Aside from virtual environments, it is also better to set your configuration as environment variables rather than hard-code it.
 
 ```bash
 if [ ! f ".env" ]
@@ -48,6 +55,8 @@ python agent.py
 
 # Using Ollama (Local)
 
+Prerequisites
+
 - Make sure you have [Ollama](https://ollama.ai/) installed on your computer. If you are using Linux/WSL, you can invoke the following command:
     ```bash
     curl https://ollama.ai/install.sh | sh
@@ -67,6 +76,8 @@ python agent.py
 ```
 
 # Using Bedrock
+
+Prerequisites
 
 - Ensure you have an IAM user with full access to Bedrock (i.e., `BedrockFullAccess`). Using IAM is a good practice to limit security breaches. See the following documentation:
     - [Create IAM user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html).
