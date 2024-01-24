@@ -131,5 +131,6 @@ if __name__ == "__main__":
     )
     ai_message = result["output"]
     print("")
+    print("")
     print(ai_message)
     save_chat_history(human_message, ai_message)
