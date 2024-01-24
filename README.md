@@ -42,6 +42,7 @@ Prerequisites
 - Make sure you have the `OPENAI_API_KEY` variable set
 
 ```bash
+export LLM_PROVIDER=openai
 python agent.py
 ```
 
@@ -61,6 +62,7 @@ python agent.py
     ```
 
 ```bash
+export LLM_PROVIDER=ollama
 python agent.py
 ```
 
@@ -96,6 +98,7 @@ python agent.py
 - Set up model access by accessing [model access page](https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess). The models will be available by request.
 
 ```bash
+export LLM_PROVIDER=openai
 python agent.py
 ```
 
