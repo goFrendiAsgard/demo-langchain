@@ -6,6 +6,10 @@ LangChain is a framework for developing applications powered by language models.
 
 # Element of Langchain ReAct Agent
 
+With [ReAct](https://react-lm.github.io/) you can sinergize the reasoning and acting in Language Model. Langchain allows you to create a ReAct agent by using `create_react_agent` function.
+
+Here are some elements you need to create a ReAct agent.
+
 - Language Model (LLM)
 - Prompt
 - Tool
