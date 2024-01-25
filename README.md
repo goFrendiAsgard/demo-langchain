@@ -1,11 +1,170 @@
-# Element of Langchain
+# Langchain
+LangChain is a framework for developing applications powered by language models. It enables applications that:
+
+- Are context-aware: connect a language model to sources of context (prompt instructions, few shot examples, content to ground its response in, etc.)
+- Reason: rely on a language model to reason (about how to answer based on provided context, what actions to take, etc.)
+
+# Element of Langchain ReAct Agent
 
 - Language Model (LLM)
-- Memory
 - Prompt
 - Tool
-- Agent
+- Agent (LLM + Prompt + Tool)
 - AgentExecutor
+
+# Tinkering with Langchain
+
+We do some experiment in [scratchpad.py](scratchpad.py). Feel free to take a look.
+
+## LLM
+
+### OpenAI
+
+OpenAI is the easiest to setup, you just need an OpenAI API Key. It offers `gpt-3.5` and `gpt-4`
+
+```python
+import os
+
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(
+    api_key=os.getenv('OPENAI_API_KEY'),
+    temperature=0,
+    streaming=True,
+)
+```
+
+### Ollama
+
+Ollama helps you install LLM model locally. Most model performs better if you have metal or CUDA (NVIDIA) installed.
+
+```python
+from langchain_community.chat_models import ChatOllama
+
+llm = ChatOllama(
+    model="mistral",
+    temperature=0.9,
+)
+```
+
+### Bedrock
+
+Bedrock offers variaous LLM model like `titan` or `claude`. As per this tutorial, it is currently only available at us-east-1 region.
+
+```python
+import boto3
+import os
+
+from langchain_community.llms import Bedrock
+
+bedrock_runtime = boto3.client(
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    service_name="bedrock-runtime",
+    region_name="us-east-1",
+)
+llm = Bedrock(
+    client=bedrock_runtime,
+    model_id="anthropic.claude-v2",
+    streaming=True,
+)
+```
+
+## Prompt
+
+Prompt is a template used by your LLM. You can pull prompt from langchain hub as follow:
+
+```python
+# https://smith.langchain.com/hub/hwchase17/react-chat
+from langchain import hub
+prompt = hub.pull("hwchase17/react-chat")
+```
+
+Or you can declare a custom prompt. Make sure that your prompt is compatible with your agent/chain/LLM
+
+```python
+prompt = PromptTemplate.from_template(
+    "\n".join(
+        [
+            "You are a helpful assistant.",
+            "You have access to the following tools:",
+            "{tools}",
+            "To use a tool, please use the following format:",
+            "```",
+            "Thought: Do I need to use a tool? Yes",
+            "Action: the action to take, should be one of [{tool_names}]",
+            "Action Input: the input to the action",
+            "Observation: the result of the action",
+            "```",
+            "When you have a response to say to the Human, or if you do not need to use a tool, you MUST use the format:",
+            "```",
+            "Thought: Do I need to use a tool? No",
+            "Final Answer: [your response here]",
+            "```",
+            "Begin!",
+            "Previous conversation history:",
+            "{chat_history}",
+            "New input: {input}",
+            "{agent_scratchpad}",
+        ]
+    )
+)
+```
+
+## Tool
+
+You can create custom tool to be used by your LLM. Langchain provides some common tools like DuckDuckGoSearch.
+
+```python
+from langchain.agents import Tool
+from langchain_community.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
+
+tool = Tool(
+    name="Search",
+    func=DuckDuckGoSearchAPIWrapper().run,
+    description="Search engine to answer questions about current events",
+)
+```
+
+Notice that you can turn any function into a tool.
+
+
+```python
+from langchain.agents import Tool
+
+def word_count(sentence: str) -> int:
+    return len(sentence.split(" "))
+
+tool = Tool(
+    name="WordCount",
+    func=word_count,
+    description="Count how many word in a text",
+)
+```
+
+## Create and Invoke Agent
+
+```python
+from langchain.agents import AgentExecutor, create_react_agent
+
+agent = create_react_agent(llm=llm, tools=tools, prompt=prompt)
+
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=tools,
+    handle_parsing_errors=True,
+)
+
+result = agent_executor.invoke(
+    {
+        # "input": "Who am I?",
+        "input": "How many people live in Canada right now?",
+        "chat_history": "Human: Hi! My name is Bob\nAI: Hello Bob! Nice to meet you",
+    }
+)
+
+print(result["output"])
+```
 
 # Creating Virtual Environment
 
@@ -50,8 +209,29 @@ Prerequisites
 
 ```bash
 export LLM_PROVIDER=openai
-python agent.py "Hello I'm Bob"
+python agent.py "Hello, I'm Go Frendi, I live in Indonesia"
 ```
+
+```
+    🖳 Thought: Do I need to use a tool? No
+    🖳 Final Answer: Hello Go Frendi! How can I assist you today?
+
+Hello Go Frendi! How can I assist you today?
+```
+
+```bash
+python agent.py "How many people live in my country right now?"
+```
+
+```
+    🖳 Thought: Do I need to use a tool? Yes
+    🖳 Action: Search
+    🖳 Action Input: "current population of Indonesia"Do I need to use a tool? No
+    🖳 Final Answer: Indonesia has a population of over 270 million people.
+
+Indonesia has a population of over 270 million people.
+```
+
 
 # Using Ollama (Local)
 
@@ -69,10 +249,32 @@ Prerequisites
     ```bash
     ollama run mistral
     ```
+Demo
 
 ```bash
 export LLM_PROVIDER=ollama
-python agent.py "Hello I'm Bob"
+python agent.py "Hello, I'm Go Frendi, I live in Indonesia"
+```
+
+```
+    🖳 Thought: Do I need to use a tool? No
+    🖳 Final Answer: Hi Go Frendi, nice to meet you! Where in Indonesia are you from?
+
+Hi Go Frendi, nice to meet you! Where in Indonesia are you from?
+```
+
+```bash
+python agent.py "How many people live in my country right now?"
+```
+
+```
+    🖳 Thought: Do I need to use a tool? Yes
+    🖳 Action: Search
+    🖳 Action Input: population of Indonesia The search results indicate that the population of Indonesia is approximately 275.7 million people.
+    🖳
+    🖳 Final Answer: The population of your country, Indonesia, is estimated to be around 275.7 million people.
+
+The population of your country, Indonesia, is estimated to be around 275.7 million people.
 ```
 
 # Using Bedrock
@@ -108,9 +310,37 @@ Prerequisites
         Once you set the configuration, AWS CLI will store your credentials on `~/.aws/credentials`.
 - Set up model access by accessing [model access page](https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess). The models will be available by request.
 
+
+Demo
+
 ```bash
-export LLM_PROVIDER=openai
-python agent.py "Hello I'm Bob"
+export LLM_PROVIDER=bedrock
+python agent.py "Hello, I'm Go Frendi, I live in Indonesia"
+```
+
+```
+    🖳 Thought: Do I need to use a tool? No
+    🖳
+    🖳 Final Answer: Hello! It's nice to meet you Go Frendi. Living in Indonesia must be really interesting. I don't know much about life there but I'd love to learn more about your home country sometime.
+
+Hello! It's nice to meet you Go Frendi. Living in Indonesia must be really interesting. I don't know much about life there but I'd love to learn more about your home country sometime.
+```
+
+```bash
+python agent.py "How many people live in my country right now?"
+```
+
+```
+    🖳 Thought: Do I need to use a tool to find out how many people currently live in Indonesia? Yes
+    🖳
+    🖳 Action: Search
+    🖳
+    🖳 Action Input: current population of indonesia
+    🖳  No, I do not need to use any other tools to answer this question.
+    🖳
+    🖳 Final Answer: Based on my search, the current population of Indonesia is around 274-275 million people. Indonesia is the fourth most populous country in the world, with a large and relatively young population. The majority of Indonesians are Muslim, making it the country with the largest Muslim population globally. The population is projected to continue growing, potentially reaching 320 million by 2045 according to some estimates.
+
+Based on my search, the current population of Indonesia is around 274-275 million people. Indonesia is the fourth most populous country in the world, with a large and relatively young population. The majority of Indonesians are Muslim, making it the country with the largest Muslim population globally. The population is projected to continue growing, potentially reaching 320 million by 2045 according to some estimates.
 ```
 
 # Further Reading
